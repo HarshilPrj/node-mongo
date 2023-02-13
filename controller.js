@@ -1,4 +1,4 @@
-const userModel = require('./schema');
+const { userModel, userEduModel } = require('./schema');
 
 const getUsers = async (req, res) => {
     let data = await userModel.find();
@@ -6,16 +6,28 @@ const getUsers = async (req, res) => {
 };
 
 const addUser = async (req, res) => {
-    if (!req.body) {
-        return res.send({ message: 'Required Data' });
-    }
+    let userEduData = {
+        degree: req.body.degree,
+        university: req.body.university,
+    };
 
-    let add = new userModel(req.body);
+    let eduData = await userEduModel.insertMany(userEduData);
+
+    let userData = {
+        firstName: req.body.firstName,
+        email: req.body.email,
+        password: req.body.password,
+        city: req.body.city,
+        state: req.body.state,
+        educationID: eduData[0]._id,
+    };
+
+    let add = new userModel(userData);
     add.save((error) => {
         if (error) {
             return res.status(401).send({ error });
         } else {
-            return res.status(401).send({ message: 'User Added Successfully' });
+            return res.status(200).send({ message: 'User Added Successfully' });
         }
     });
 };
@@ -38,4 +50,9 @@ const deleteUser = async (req, res) => {
     return res.send(del);
 };
 
-module.exports = { getUsers, addUser, getByID, updateUser, deleteUser };
+const loginUser = async (req, res) => {
+    let checkUser = await userModel.where('email', req.body.email);
+    return res.send(checkUser);
+};
+
+module.exports = { getUsers, addUser, getByID, updateUser, deleteUser, loginUser };
